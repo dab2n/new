@@ -13,7 +13,7 @@
 
   <!--
     MediaPipe Gesture Recognizer (vision_bundle)
-    To update the model version, change the @x.x.x tag below.
+    버전 업데이트 시 아래 @x.x.x 태그만 변경하세요.
     Docs: https://developers.google.com/mediapipe/solutions/vision/gesture_recognizer
   -->
   <script
@@ -30,35 +30,50 @@
     }
 
     :root {
-      --bg: #f8f8f8;
-      --surface: #ffffff;
-      --border: #e8e8e8;
       --text-primary: #191919;
       --text-secondary: #888888;
       --accent: #3182f6;
-      --radius: 16px;
+      --overlay-bg: rgba(0, 0, 0, 0.32);
+    }
+
+    html, body {
+      width: 100%;
+      height: 100%;
+      overflow: hidden;
     }
 
     body {
       font-family: 'Pretendard', -apple-system, BlinkMacSystemFont, sans-serif;
-      background: var(--bg);
-      color: var(--text-primary);
-      min-height: 100dvh;
-      display: flex;
-      flex-direction: column;
-      align-items: center;
-      justify-content: center;
+      background: #111;
     }
 
-    /* ── Header ── */
+    /* ── Full-screen background image ── */
+    /*
+      SWAP GUIDE (image → video)
+      1. <img id="main-media"> 를 아래처럼 교체:
+           <video id="main-media" autoplay loop muted playsinline></video>
+      2. JS의 ASSETS 객체 경로를 .mp4 파일로 변경
+      3. CSS는 수정 불필요 — object-fit: cover 그대로 적용됩니다.
+    */
+    #main-media {
+      position: fixed;
+      inset: 0;
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+      display: block;
+      transition: opacity 0.3s ease;
+      z-index: 0;
+    }
+
+    /* ── Top overlay bar ── */
     header {
       position: fixed;
       top: 0;
       left: 0;
       right: 0;
       height: 56px;
-      background: var(--surface);
-      border-bottom: 1px solid var(--border);
+      background: linear-gradient(to bottom, rgba(0,0,0,0.45) 0%, transparent 100%);
       display: flex;
       align-items: center;
       padding: 0 24px;
@@ -68,113 +83,84 @@
     header h1 {
       font-size: 15px;
       font-weight: 600;
-      color: var(--text-primary);
+      color: #fff;
     }
 
-    /* ── Main card ── */
-    main {
-      display: flex;
-      flex-direction: column;
-      align-items: center;
-      gap: 32px;
-      padding: 80px 24px 120px;
-      width: 100%;
-      max-width: 480px;
-    }
-
-    /* ── Status badge ── */
+    /* ── Status badge — bottom-left ── */
     .status-wrap {
+      position: fixed;
+      bottom: 32px;
+      left: 28px;
       display: flex;
       align-items: center;
       gap: 8px;
+      z-index: 10;
     }
 
     .status-dot {
       width: 8px;
       height: 8px;
       border-radius: 50%;
-      background: var(--border);
+      background: rgba(255,255,255,0.4);
       transition: background 0.3s;
       flex-shrink: 0;
     }
 
-    .status-dot.hand    { background: #f5a623; }
-    .status-dot.thumb   { background: #1ac472; }
+    .status-dot.hand  { background: #f5a623; }
+    .status-dot.thumb { background: #1ac472; }
 
     .status-text {
       font-size: 13px;
       font-weight: 500;
-      color: var(--text-secondary);
+      color: rgba(255,255,255,0.6);
       transition: color 0.3s;
     }
 
-    .status-text.hand   { color: #f5a623; }
-    .status-text.thumb  { color: #1ac472; }
+    .status-text.hand  { color: #f5a623; }
+    .status-text.thumb { color: #1ac472; }
 
-    /* ── Image / video container ── */
-    /*
-      SWAP GUIDE
-      현재: <img> 태그를 사용합니다.
-      영상으로 교체 시:
-        1. <img id="main-media"> 를 <video id="main-media" autoplay loop muted playsinline> 로 교체
-        2. JS의 swapMedia() 에서 src → currentSrc 또는 setAttribute('src', ...) 방식 동일하게 사용 가능
-        3. CSS는 그대로 적용됩니다.
-    */
-    .media-card {
-      width: 100%;
-      aspect-ratio: 1 / 1;
-      border-radius: var(--radius);
-      overflow: hidden;
-      background: var(--surface);
-      border: 1px solid var(--border);
-      position: relative;
-    }
-
-    #main-media {
-      width: 100%;
-      height: 100%;
-      object-fit: cover;
-      display: block;
-      transition: opacity 0.25s ease;
-    }
-
-    /* ── Start button ── */
+    /* ── Start button — bottom-left above status ── */
     #start-btn {
-      height: 52px;
-      width: 100%;
+      position: fixed;
+      bottom: 68px;
+      left: 28px;
+      height: 44px;
+      padding: 0 20px;
       border: none;
-      border-radius: 12px;
+      border-radius: 10px;
       background: var(--accent);
       color: #fff;
       font-family: inherit;
-      font-size: 15px;
+      font-size: 14px;
       font-weight: 600;
       cursor: pointer;
       transition: opacity 0.15s;
+      z-index: 10;
     }
 
     #start-btn:hover  { opacity: 0.88; }
-    #start-btn:active { opacity: 0.76; }
+    #start-btn:active { opacity: 0.72; }
     #start-btn:disabled {
-      background: var(--border);
-      color: var(--text-secondary);
+      background: rgba(255,255,255,0.18);
+      color: rgba(255,255,255,0.5);
       cursor: default;
       opacity: 1;
     }
 
-    /* ── Webcam preview (bottom-right) ── */
+    /* ── Webcam preview — bottom-right ── */
     #webcam-wrap {
       position: fixed;
-      bottom: 24px;
-      right: 24px;
-      width: 120px;
-      height: 90px;
-      border-radius: 12px;
+      bottom: 28px;
+      right: 28px;
+      width: 240px;
+      height: 180px;
+      border-radius: 14px;
       overflow: hidden;
-      border: 1.5px solid var(--border);
+      border: 1.5px solid rgba(255,255,255,0.18);
       background: #000;
       display: none; /* shown after camera starts */
       z-index: 20;
+      box-shadow: 0 8px 32px rgba(0,0,0,0.4);
     }
 
     #webcam {
@@ -187,10 +173,14 @@
 
     /* ── Error message ── */
     #error-msg {
+      position: fixed;
+      bottom: 120px;
+      left: 28px;
       font-size: 13px;
-      color: #e03131;
-      text-align: center;
+      color: #ff6b6b;
       display: none;
+      z-index: 10;
+      max-width: 300px;
     }
   </style>
 </head>
@@ -200,26 +190,30 @@
     <h1>Gesture Interactive</h1>
   </header>
 
-  <main>
-    <div class="status-wrap">
-      <div class="status-dot" id="status-dot"></div>
-      <span class="status-text" id="status-text">Waiting</span>
-    </div>
+  <!--
+    Main reactive image — fills the entire screen.
+    손이 없거나 엄지가 아닐 때: default-image.png
+    Thumb_Up 감지 시: thumb-up-image.png
 
-    <!-- Main reactive image. Replace <img> with <video> for mp4 — see SWAP GUIDE above. -->
-    <div class="media-card">
-      <img
-        id="main-media"
-        src="default-image.png"
-        alt="main visual"
-      />
-    </div>
+    mp4로 교체 시 이 <img>를 <video autoplay loop muted playsinline>로 바꾸고
+    ASSETS 경로를 .mp4로 변경하세요. (SWAP GUIDE 참고)
+  -->
+  <img
+    id="main-media"
+    src="default-image.png"
+    alt="main visual"
+  />
 
-    <button id="start-btn">Start Camera</button>
-    <p id="error-msg"></p>
-  </main>
+  <button id="start-btn">Start Camera</button>
 
-  <!-- Small webcam preview -->
+  <div class="status-wrap">
+    <div class="status-dot" id="status-dot"></div>
+    <span class="status-text" id="status-text">Waiting</span>
+  </div>
+
+  <p id="error-msg"></p>
+
+  <!-- Webcam preview (bottom-right) -->
   <div id="webcam-wrap">
     <video id="webcam" autoplay playsinline muted></video>
   </div>
@@ -228,32 +222,30 @@
     import { GestureRecognizer, FilesetResolver }
       from "https://cdn.jsdelivr.net/npm/@mediapipe/tasks-vision@0.10.14/vision_bundle.mjs";
 
-    // ── DOM refs ────────────────────────────────────────────────────────────
-    const startBtn      = document.getElementById("start-btn");
-    const webcamEl      = document.getElementById("webcam");
-    const webcamWrap    = document.getElementById("webcam-wrap");
-    const mainMedia     = document.getElementById("main-media");
-    const statusDot     = document.getElementById("status-dot");
-    const statusText    = document.getElementById("status-text");
-    const errorMsg      = document.getElementById("error-msg");
+    // ── DOM refs ─────────────────────────────────────────────────────────────
+    const startBtn   = document.getElementById("start-btn");
+    const webcamEl   = document.getElementById("webcam");
+    const webcamWrap = document.getElementById("webcam-wrap");
+    const mainMedia  = document.getElementById("main-media");
+    const statusDot  = document.getElementById("status-dot");
+    const statusText = document.getElementById("status-text");
+    const errorMsg   = document.getElementById("error-msg");
 
-    // ── Asset paths ─────────────────────────────────────────────────────────
+    // ── Asset paths ───────────────────────────────────────────────────────────
     /*
       SWAP GUIDE (images → videos)
-      아래 경로를 mp4 파일 경로로 바꾸고,
-      index.html의 <img>를 <video autoplay loop muted playsinline>로 교체하세요.
+      경로를 .mp4로 변경하고 <img>를 <video>로 교체하세요.
     */
     const ASSETS = {
-      default:  "default-image.png",
-      thumbUp:  "thumb-up-image.png",
+      default: "default-image.png",
+      thumbUp: "thumb-up-image.png",
     };
 
-    // ── State ────────────────────────────────────────────────────────────────
+    // ── State ─────────────────────────────────────────────────────────────────
     let recognizer = null;
-    let animFrameId = null;
-    let lastState = "waiting"; // "waiting" | "hand" | "thumb"
+    let lastState  = "waiting"; // "waiting" | "hand" | "thumb"
 
-    // ── UI helpers ───────────────────────────────────────────────────────────
+    // ── UI helpers ────────────────────────────────────────────────────────────
     function setStatus(state) {
       if (state === lastState) return;
       lastState = state;
@@ -268,14 +260,14 @@
       statusDot.className  = "status-dot"  + (state !== "waiting" ? ` ${state}` : "");
       statusText.className = "status-text" + (state !== "waiting" ? ` ${state}` : "");
 
-      // swap the main visual
+      // swap the main visual with a quick fade
       const src = state === "thumb" ? ASSETS.thumbUp : ASSETS.default;
-      if (mainMedia.src !== src && !mainMedia.src.endsWith(src)) {
+      if (!mainMedia.src.endsWith(src)) {
         mainMedia.style.opacity = "0";
         setTimeout(() => {
           mainMedia.src = src;
           mainMedia.style.opacity = "1";
-        }, 120);
+        }, 150);
       }
     }
 
@@ -284,7 +276,7 @@
       errorMsg.style.display = "block";
     }
 
-    // ── MediaPipe setup ──────────────────────────────────────────────────────
+    // ── MediaPipe setup ───────────────────────────────────────────────────────
     async function initRecognizer() {
       const vision = await FilesetResolver.forVisionTasks(
         "https://cdn.jsdelivr.net/npm/@mediapipe/tasks-vision@0.10.14/wasm"
@@ -300,10 +292,10 @@
       });
     }
 
-    // ── Detection loop ───────────────────────────────────────────────────────
+    // ── Detection loop ────────────────────────────────────────────────────────
     function detect() {
       if (!recognizer || webcamEl.readyState < 2) {
-        animFrameId = requestAnimationFrame(detect);
+        requestAnimationFrame(detect);
         return;
       }
 
@@ -312,34 +304,27 @@
       if (!result.gestures || result.gestures.length === 0) {
         setStatus("waiting");
       } else {
-        const topGesture = result.gestures[0][0]?.categoryName ?? "";
-        if (topGesture === "Thumb_Up") {
-          setStatus("thumb");
-        } else {
-          setStatus("hand");
-        }
+        const top = result.gestures[0][0]?.categoryName ?? "";
+        setStatus(top === "Thumb_Up" ? "thumb" : "hand");
       }
 
-      animFrameId = requestAnimationFrame(detect);
+      requestAnimationFrame(detect);
     }
 
-    // ── Camera start ─────────────────────────────────────────────────────────
+    // ── Camera start ──────────────────────────────────────────────────────────
     startBtn.addEventListener("click", async () => {
       startBtn.disabled = true;
       startBtn.textContent = "Starting...";
 
       try {
-        // 1. init model if not yet loaded
         if (!recognizer) await initRecognizer();
 
-        // 2. request webcam
         const stream = await navigator.mediaDevices.getUserMedia({
           video: { facingMode: "user", width: 640, height: 480 },
         });
         webcamEl.srcObject = stream;
         await webcamEl.play();
 
-        // 3. show preview & start loop
         webcamWrap.style.display = "block";
         startBtn.textContent = "Camera On";
         detect();
