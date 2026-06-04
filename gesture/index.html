@@ -250,11 +250,14 @@
     };
 
     // ── State ─────────────────────────────────────────────────────────────────
-    let recognizer = null;
-    let lastState  = "waiting"; // "waiting" | "hand" | "thumb"
+    let recognizer    = null;
+    let lastState     = "waiting"; // "waiting" | "hand" | "thumb"
+    let pendingState  = "waiting";
+    let pendingCount  = 0;
+    const DEBOUNCE_FRAMES = 6; // 같은 결과가 6프레임 연속이어야 상태 전환
 
     // ── UI helpers ────────────────────────────────────────────────────────────
-    function setStatus(state) {
+    function commitState(state) {
       if (state === lastState) return;
       lastState = state;
 
@@ -268,8 +271,19 @@
       statusDot.className  = "status-dot"  + (state !== "waiting" ? ` ${state}` : "");
       statusText.className = "status-text" + (state !== "waiting" ? ` ${state}` : "");
 
-      // 엄지 레이어만 fade — 기본 이미지는 항상 유지되어 검정 깜빡임 없음
+      // 엄지 레이어만 fade — 기본 이미지는 항상 유지
       mediaThumb.classList.toggle("visible", state === "thumb");
+    }
+
+    // 짧은 오감지로 이미지가 깜빡이지 않도록 연속 프레임 debounce
+    function setStatus(state) {
+      if (state === pendingState) {
+        pendingCount++;
+        if (pendingCount >= DEBOUNCE_FRAMES) commitState(state);
+      } else {
+        pendingState = state;
+        pendingCount = 1;
+      }
     }
 
     function showError(msg) {
