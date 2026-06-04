@@ -47,23 +47,39 @@
       background: #111;
     }
 
-    /* ── Full-screen background image ── */
+    /* ── Full-screen background images ── */
     /*
+      두 이미지를 같은 위치에 겹쳐 쌓습니다.
+      - #media-default : 항상 보임 (z-index 1)
+      - #media-thumb   : Thumb_Up 감지 시에만 opacity 1 (z-index 2)
+      검정 배경이 비치지 않도록 src 교체 없이 레이어 전환만 사용합니다.
+
       SWAP GUIDE (image → video)
-      1. <img id="main-media"> 를 아래처럼 교체:
-           <video id="main-media" autoplay loop muted playsinline></video>
-      2. JS의 ASSETS 객체 경로를 .mp4 파일로 변경
-      3. CSS는 수정 불필요 — object-fit: cover 그대로 적용됩니다.
+      각 <img>를 <video autoplay loop muted playsinline>로 교체하고
+      ASSETS 경로를 .mp4로 변경하세요. CSS는 수정 불필요합니다.
     */
-    #main-media {
+    #media-default,
+    #media-thumb {
       position: fixed;
       inset: 0;
       width: 100%;
       height: 100%;
       object-fit: cover;
       display: block;
-      transition: opacity 0.3s ease;
-      z-index: 0;
+    }
+
+    #media-default {
+      z-index: 1;
+    }
+
+    #media-thumb {
+      z-index: 2;
+      opacity: 0;
+      transition: opacity 0.35s ease;
+    }
+
+    #media-thumb.visible {
+      opacity: 1;
     }
 
     /* ── Top overlay bar ── */
@@ -190,19 +206,11 @@
     <h1>Gesture Interactive</h1>
   </header>
 
-  <!--
-    Main reactive image — fills the entire screen.
-    손이 없거나 엄지가 아닐 때: default-image.png
-    Thumb_Up 감지 시: thumb-up-image.png
+  <!-- 기본 이미지: 항상 화면에 표시 -->
+  <img id="media-default" src="default-image.jpg" alt="default visual" />
 
-    mp4로 교체 시 이 <img>를 <video autoplay loop muted playsinline>로 바꾸고
-    ASSETS 경로를 .mp4로 변경하세요. (SWAP GUIDE 참고)
-  -->
-  <img
-    id="main-media"
-    src="default-image.jpg"
-    alt="main visual"
-  />
+  <!-- 엄지 이미지: Thumb_Up 감지 시 위로 fade-in -->
+  <img id="media-thumb" src="thumb-up-image.png" alt="thumb up visual" />
 
   <button id="start-btn">Start Camera</button>
 
@@ -223,13 +231,13 @@
       from "https://cdn.jsdelivr.net/npm/@mediapipe/tasks-vision@0.10.14/vision_bundle.mjs";
 
     // ── DOM refs ─────────────────────────────────────────────────────────────
-    const startBtn   = document.getElementById("start-btn");
-    const webcamEl   = document.getElementById("webcam");
-    const webcamWrap = document.getElementById("webcam-wrap");
-    const mainMedia  = document.getElementById("main-media");
-    const statusDot  = document.getElementById("status-dot");
-    const statusText = document.getElementById("status-text");
-    const errorMsg   = document.getElementById("error-msg");
+    const startBtn     = document.getElementById("start-btn");
+    const webcamEl     = document.getElementById("webcam");
+    const webcamWrap   = document.getElementById("webcam-wrap");
+    const mediaThumb   = document.getElementById("media-thumb");
+    const statusDot    = document.getElementById("status-dot");
+    const statusText   = document.getElementById("status-text");
+    const errorMsg     = document.getElementById("error-msg");
 
     // ── Asset paths ───────────────────────────────────────────────────────────
     /*
@@ -260,15 +268,8 @@
       statusDot.className  = "status-dot"  + (state !== "waiting" ? ` ${state}` : "");
       statusText.className = "status-text" + (state !== "waiting" ? ` ${state}` : "");
 
-      // swap the main visual with a quick fade
-      const src = state === "thumb" ? ASSETS.thumbUp : ASSETS.default;
-      if (!mainMedia.src.endsWith(src)) {
-        mainMedia.style.opacity = "0";
-        setTimeout(() => {
-          mainMedia.src = src;
-          mainMedia.style.opacity = "1";
-        }, 150);
-      }
+      // 엄지 레이어만 fade — 기본 이미지는 항상 유지되어 검정 깜빡임 없음
+      mediaThumb.classList.toggle("visible", state === "thumb");
     }
 
     function showError(msg) {
